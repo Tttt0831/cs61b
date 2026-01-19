@@ -6,6 +6,8 @@ import game2048rendering.Tile;
 
 import java.util.Formatter;
 
+import static jdk.jfr.internal.periodic.PeriodicEvents.setChanged;
+
 
 /** The state of a game of 2048.
  *  @author P. N. Hilfinger + Josh Hug
@@ -85,6 +87,13 @@ public class Model {
      * */
     public boolean emptySpaceExists() {
         // TODO: Task 2. Fill in this function.
+        for (int y = 0; y < board.size(); y++) {
+            for (int x = 0; x < board.size(); x++) {
+                if(tile(x,y) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -95,6 +104,14 @@ public class Model {
      */
     public boolean maxTileExists() {
         // TODO: Task 3. Fill in this function.
+        for (int y = 0; y < board.size(); y++) {
+            for (int x = 0; x < board.size(); x++) {
+                Tile t = board.tile(x, y);
+                if (t != null && t.value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -106,31 +123,81 @@ public class Model {
      */
     public boolean atLeastOneMoveExists() {
         // TODO: Fill in this function.
+        if (emptySpaceExists()) {
+            return true;
+        }
+
+        int size = board.size();
+
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                int value = tile(x, y).value();
+
+                // Check right neighbor
+                if (x + 1 < size && value == tile(x + 1, y).value()) {
+                    return true;
+                }
+
+                // Check bottom neighbor
+                if (y + 1 < size && value == tile(x, y + 1).value()) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
     /**
      * Moves the tile at position (x, y) as far up as possible.
-     *
+     * <p>
      * Rules for Tilt:
      * 1. If two Tiles are adjacent in the direction of motion and have
-     *    the same value, they are merged into one Tile of twice the original
-     *    value and that new value is added to the score instance variable
+     * the same value, they are merged into one Tile of twice the original
+     * value and that new value is added to the score instance variable
      * 2. A tile that is the result of a merge will not merge again on that
-     *    tilt. So each move, every tile will only ever be part of at most one
-     *    merge (perhaps zero).
+     * tilt. So each move, every tile will only ever be part of at most one
+     * merge (perhaps zero).
      * 3. When three adjacent tiles in the direction of motion have the same
-     *    value, then the leading two tiles in the direction of motion merge,
-     *    and the trailing tile does not.
+     * value, then the leading two tiles in the direction of motion merge,
+     * and the trailing tile does not.
+     *
+     * @return
      */
-    public void moveTileUpAsFarAsPossible(int x, int y) {
+    public boolean moveTileUpAsFarAsPossible(int x, int y) {
         Tile currTile = board.tile(x, y);
         int myValue = currTile.value();
         int targetY = y;
 
         // TODO: Tasks 5, 6, and 10. Fill in this function.
-    }
+        // 一直向上找可以去的位置
+        while (targetY < board.size() - 1) {
+            Tile above = board.tile(x, targetY + 1);
 
+            // 情况 1：上方是空的
+            if (above == null) {
+                targetY++;
+            }
+            // 情况 2：可以合并
+            else if (above.value() == myValue && !above.wasMerged()) {
+                targetY++;
+                break;
+            }
+            // 情况 3：被挡住
+            else {
+                break;
+            }
+        }
+
+        if (targetY != y) {
+            board.move(x, targetY, currTile);
+            if (currTile.wasMerged()) {
+                score += board.tile(x, targetY).value();  // 更新分数
+            }
+        }
+
+        return false;
+    }
     /** Handles the movements of the tilt in column x of the board
      * by moving every tile in the column as far up as possible.
      * The viewing perspective has already been set,
@@ -138,10 +205,37 @@ public class Model {
      * */
     public void tiltColumn(int x) {
         // TODO: Task 7. Fill in this function.
-    }
+            for (int y = board.size() - 1; y >= 0; y--) {
+                Tile t = board.tile(x, y);
+                if (t != null) {
+                    moveTileUpAsFarAsPossible(x, y);
+                }
+            }
+        }
 
     public void tilt(Side side) {
         // TODO: Tasks 8 and 9. Fill in this function.
+        boolean changed = false;
+
+        board.setViewingPerspective(side);
+
+        // 对每一列进行处理
+        for (int x = 0; x < board.size(); x++) {
+            // 从上往下遍历（y从大到小），处理每个方块
+            for (int y = board.size() - 2; y >= 0; y--) {  // 注意：从size-2开始，因为最上面的方块不需要移动
+                Tile t = board.tile(x, y);
+                if (t != null) {
+                    boolean moved = moveTileUpAsFarAsPossible(x, y);
+                    changed = changed || moved;
+                }
+            }
+        }
+
+        board.setViewingPerspective(Side.NORTH);
+
+        if (changed) {
+            setChanged();
+        }
     }
 
     /** Tilts every column of the board toward SIDE.
