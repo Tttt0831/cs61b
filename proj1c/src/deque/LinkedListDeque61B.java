@@ -3,19 +3,10 @@ package deque;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * CS61B Project 1A: LinkedListDeque
- * A double-ended queue implementation using a doubly-linked list with sentinel node.
- *
- * KEY POINT: This implementation uses a circular doubly-linked list with a sentinel
- * node to simplify edge cases and maintain constant-time operations at both ends.
- */
-public class LinkedListDeque<T> implements Deque61B<T> {
-
+public class LinkedListDeque61B<T> implements Deque61B<T> {
     /**
-     * KEY POINT 1: Inner Node class - Doubly linked list
-     * Each node contains: data, previous pointer, next pointer
-     * This allows O(1) traversal in both directions
+     * 【要点1】内部节点类 - 使用双向链表
+     * 每个节点包含：数据、前驱指针、后继指针
      */
     private class Node {
         T item;
@@ -30,24 +21,18 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 2: Sentinel node simplifies edge cases
-     * sentinel.next points to the first real node
-     * sentinel.prev points to the last real node
-     * Empty deque: sentinel.next == sentinel.prev == sentinel
-     *
-     * Benefits:
-     * - No need to special-case first/last element operations
-     * - No null pointer checks needed
-     * - Uniform code for all add/remove operations
+     * 【要点2】使用哨兵节点(sentinel node)简化边界情况
+     * sentinel.next 指向第一个真实节点
+     * sentinel.prev 指向最后一个真实节点
+     * 空队列时：sentinel.next == sentinel.prev == sentinel
      */
     private Node sentinel;
     private int size;
 
     /**
-     * KEY POINT 3: Constructor - Initialize circular structure
-     * The sentinel points to itself in an empty deque
+     * 【要点3】构造函数 - 初始化哨兵节点为循环结构
      */
-    public LinkedListDeque() {
+    public LinkedListDeque61B() {
         sentinel = new Node(null, null, null);
         sentinel.next = sentinel;
         sentinel.prev = sentinel;
@@ -55,49 +40,36 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 4: addFirst - Add element at the front
-     * Time complexity: O(1)
-     *
-     * Steps:
-     * 1. Create new node pointing to sentinel and current first
-     * 2. Update current first's prev to new node
-     * 3. Update sentinel's next to new node
-     * 4. Increment size
+     * 【要点4】addFirst - 在链表头部添加元素
+     * 时间复杂度：O(1)
      */
     @Override
     public void addFirst(T x) {
         Node newNode = new Node(x, sentinel, sentinel.next);
-        sentinel.next.prev = newNode;  // Current first now points back to new node
-        sentinel.next = newNode;        // Sentinel points to new node as first
+        sentinel.next.prev = newNode;  // 原第一个节点的prev指向新节点
+        sentinel.next = newNode;        // sentinel的next指向新节点
         size++;
     }
 
     /**
-     * KEY POINT 5: addLast - Add element at the back
-     * Time complexity: O(1)
-     *
-     * Steps:
-     * 1. Create new node pointing to current last and sentinel
-     * 2. Update current last's next to new node
-     * 3. Update sentinel's prev to new node
-     * 4. Increment size
+     * 【要点5】addLast - 在链表尾部添加元素
+     * 时间复杂度：O(1)
      */
     @Override
     public void addLast(T x) {
         Node newNode = new Node(x, sentinel.prev, sentinel);
-        sentinel.prev.next = newNode;  // Current last now points to new node
-        sentinel.prev = newNode;        // Sentinel's prev points to new node
+        sentinel.prev.next = newNode;  // 原最后节点的next指向新节点
+        sentinel.prev = newNode;        // sentinel的prev指向新节点
         size++;
     }
 
     /**
-     * KEY POINT 6: toList - Convert to ArrayList
-     * Used for testing and debugging
-     * Traverses from first to last in logical order
+     * 【要点6】toList - 转换为ArrayList
+     * 用于测试和调试
      */
     @Override
     public List<T> toList() {
-        List<T> returnList = new ArrayList<>();
+        List<T> returnList = new ArrayList<T>();
         Node current = sentinel.next;
         while (current != sentinel) {
             returnList.add(current.item);
@@ -107,8 +79,8 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 7: isEmpty - Check if deque is empty
-     * Can check either size or sentinel.next == sentinel
+     * 【要点7】isEmpty - 检查是否为空
+     * 可以通过size或检查sentinel.next == sentinel来判断
      */
     @Override
     public boolean isEmpty() {
@@ -116,8 +88,8 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 8: size - Return number of elements
-     * Time complexity: O(1) because we maintain a size variable
+     * 【要点8】size - 返回元素数量
+     * 时间复杂度：O(1)
      */
     @Override
     public int size() {
@@ -125,17 +97,9 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 9: removeFirst - Remove and return first element
-     * Time complexity: O(1)
-     *
-     * IMPORTANT: Must handle empty deque case
-     *
-     * Steps:
-     * 1. Check if empty, return null if so
-     * 2. Save reference to first node and its item
-     * 3. Update sentinel.next to skip first node
-     * 4. Update new first's prev to sentinel
-     * 5. Decrement size
+     * 【要点9】removeFirst - 移除并返回第一个元素
+     * 时间复杂度：O(1)
+     * 注意：需要处理空队列的情况
      */
     @Override
     public T removeFirst() {
@@ -146,7 +110,7 @@ public class LinkedListDeque<T> implements Deque61B<T> {
         Node first = sentinel.next;
         T item = first.item;
 
-        // Skip over first node
+        // 调整指针：跳过第一个节点
         sentinel.next = first.next;
         first.next.prev = sentinel;
 
@@ -155,17 +119,9 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 10: removeLast - Remove and return last element
-     * Time complexity: O(1)
-     *
-     * IMPORTANT: Must handle empty deque case
-     *
-     * Steps:
-     * 1. Check if empty, return null if so
-     * 2. Save reference to last node and its item
-     * 3. Update sentinel.prev to skip last node
-     * 4. Update new last's next to sentinel
-     * 5. Decrement size
+     * 【要点10】removeLast - 移除并返回最后一个元素
+     * 时间复杂度：O(1)
+     * 注意：需要处理空队列的情况
      */
     @Override
     public T removeLast() {
@@ -176,7 +132,7 @@ public class LinkedListDeque<T> implements Deque61B<T> {
         Node last = sentinel.prev;
         T item = last.item;
 
-        // Skip over last node
+        // 调整指针：跳过最后一个节点
         sentinel.prev = last.prev;
         last.prev.next = sentinel;
 
@@ -185,16 +141,9 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 11: get - Iterative approach to get element at index
-     * Time complexity: O(n) where n is the index
-     *
-     * IMPORTANT: Index starts at 0, returns null if out of bounds
-     *
-     * Algorithm:
-     * 1. Validate index bounds
-     * 2. Start from first real node (sentinel.next)
-     * 3. Traverse forward index times
-     * 4. Return item at that node
+     * 【要点11】get - 迭代方式获取第index个元素
+     * 时间复杂度：O(n)
+     * 注意：index从0开始，越界返回null
      */
     @Override
     public T get(int index) {
@@ -210,12 +159,9 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 12: getRecursive - Recursive approach to get element
-     * This is specific to LinkedListDeque (not in interface)
-     * Uses a helper method to implement recursion
-     *
-     * Time complexity: O(n)
-     * Space complexity: O(n) due to call stack
+     * 【要点12】getRecursive - 递归方式获取第index个元素
+     * 这是LinkedListDeque特有的方法
+     * 使用辅助方法实现递归
      */
     public T getRecursive(int index) {
         if (index < 0 || index >= size) {
@@ -225,12 +171,9 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 13: Recursive helper method
-     * Base case: index == 0, return current node's item
-     * Recursive case: search in next node with index-1
-     *
-     * This demonstrates the recursive thinking pattern:
-     * "To get element at index n, get element at index n-1 from next node"
+     * 【要点13】递归辅助方法
+     * 基础情况：index == 0时返回当前节点的item
+     * 递归情况：在下一个节点上查找index-1
      */
     private T getRecursiveHelper(Node node, int index) {
         if (index == 0) {
@@ -240,8 +183,7 @@ public class LinkedListDeque<T> implements Deque61B<T> {
     }
 
     /**
-     * KEY POINT 14: Optional toString for debugging
-     * Makes it easy to see the deque's contents
+     * 【要点14】可选：实现toString方便调试
      */
     @Override
     public String toString() {
@@ -257,4 +199,6 @@ public class LinkedListDeque<T> implements Deque61B<T> {
         sb.append("]");
         return sb.toString();
     }
+
+
 }
